@@ -1,0 +1,6 @@
+Revision history for Perl extension POE::Component::IRC::Plugin::PAUSE::RecentUploads.
+
+0.01  Sat Feb  2 22:02:26 2008
+	- original version; created by h2xs 1.23 with options
+		-A -X -c --skip-exporter -v 0.01 -n POE::Component::IRC::Plugin::PAUSE::RecentUploads
+

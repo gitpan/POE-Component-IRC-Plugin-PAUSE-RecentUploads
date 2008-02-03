@@ -1,0 +1,10 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+examples/recent_uploads_bot.pl
+t/98-pod.t
+t/99-pod-coverage.t
+t/POE-Component-IRC-Plugin-PAUSE-RecentUploads.t
+lib/POE/Component/IRC/Plugin/PAUSE/RecentUploads.pm
+META.yml                                 Module meta-data (added by MakeMaker)

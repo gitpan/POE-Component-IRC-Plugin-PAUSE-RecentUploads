@@ -4,7 +4,7 @@ use 5.008008;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp;
 use POE;
@@ -27,6 +27,7 @@ sub new {
         report_event  => 'pause_new_uploads',
         message_type  => 'ctcp',
         loud_format   => 'ACTION upload: [[:dist:]] by [[:name:]]',
+        flood_format  => 'ACTION Total of [[:total:]] uploads were uploaded',
 
         %args,
     );
@@ -121,19 +122,36 @@ sub _fetched {
     }
 
     unless ( $self->{quiet} ) {
-        foreach my $dist ( @{ $input->{data} || [] } ) {
-            my $format = $self->{loud_format};
-            $format =~ s/\Q[[:dist:]]/$dist->{dist}/gi;
-            $format =~ s/\Q[[:name:]]/$dist->{name}/gi;
-            $format =~ s/\Q[[:size:]]/$dist->{size}/gi;
-
+        if ( defined $self->{flood_limit}
+            and ( my $total = @{ $input->{data} } ) > $self->{flood_limit} 
+        ) {
             foreach my $channel ( @{ $self->{channels } } ) {
+                my $format = $self->{flood_format};
+                $format =~ s/\Q[[:total:]]/$total/gi;
+
                 $kernel->post(
                     $self->{irc} =>
                     $self->{message_type} =>
                     $channel =>
                     $format
                 );
+            }
+        }
+        else {
+            foreach my $dist ( @{ $input->{data} || [] } ) {
+                my $format = $self->{loud_format};
+                $format =~ s/\Q[[:dist:]]/$dist->{dist}/gi;
+                $format =~ s/\Q[[:name:]]/$dist->{name}/gi;
+                $format =~ s/\Q[[:size:]]/$dist->{size}/gi;
+
+                foreach my $channel ( @{ $self->{channels } } ) {
+                    $kernel->post(
+                        $self->{irc} =>
+                        $self->{message_type} =>
+                        $channel =>
+                        $format
+                    );
+                }
             }
         }
     }
@@ -216,6 +234,7 @@ PAUSE (L<http://pause.perl.org>)
                 pass  => 'PAUSE_PASS',
                 interval => 600,
                 channels => \@Channels,
+                flood_limit => 5,
             )
     );
 
@@ -268,6 +287,15 @@ The C<loud_format> takes a scalar that specifies the format of the
 report message. There are three special sequences in the format which
 will be replaced with data before being sent out, those are as follows:
 
+=head2 flood_format
+
+    ->new( flood_format  => 'ACTION Total of [[:total:]] uploads were uploaded' );
+
+B<Optional>. When when C<flood_limit> is in effect (see below)
+and the total number of the uploads is exceeded, the C<flood_format>
+message will sent. The special string C<[[:total:]]> will be replaced by
+the total number of uploads found. B<Defaults to:> C<ACTION Total of [[:total:]] uploads were uploaded>.
+
 =over 10
 
 =item [[:dist:]]
@@ -315,12 +343,25 @@ will not do the "reports" (see C<message_type> and C<loud_format> options
 above). It will only emit the two type of events (see below).
 B<Defaults to:> C<0>
 
+=head2 flood_limit
+
+    ->new( flood_limit => 5 );
+
+B<Optional>. The C<flood_limit> prevents channel floods when C<quiet>
+option is set to a false value (its the default). If after fetching a
+new list of uploads, the number of uploads exceeds the number
+specified in C<flood_limit>, the plugin will respond only with the
+total number of uploads. You can still get the details via the sent out
+event (see EMITED EVENTS section). If C<flood_limit> is set to C<undef>
+no flood protection will be in effect. B<Defaults to:> C<undef> (no
+flood protection).
+
 =head2 fetched_event
 
     ->new( fetched_event => 'pause_uploads_list_event' )
 
 B<Optional>. Specifies the name of the event to emit after
-fetching the list of uploads (see OUTPUT section for details).
+fetching the list of uploads (see EMITED EVENTS section for details).
 B<Defaults to:> C<pause_uploads_list>
 
 =head2 report_event
@@ -365,7 +406,7 @@ the C<timeout>, which will default to 30 seconds.
 B<Optional>. When set to a true value will make the plugin print out some
 debug messages. B<Defaults to:> C<0>
 
-=head1 OUTPUT
+=head1 EMITED EVENTS
 
 Even though in most cases setting up the plugin with C<format> and C<ctcp>
 will suffice for the operation of the plugin you also have an option
@@ -380,7 +421,7 @@ accesses L<http://pause.perl.org> for a fresh list of uploads. This will
 be emited every C<interval> seconds (see contructor's C<interval> option
 above). The input will be in C<ARG0> and will be exactly the same as in
 L<POE::Component::WWW::PAUSE::RecentUploads::Tail> output. See
-OUTPUT section in L<POE::Component::WWW::PAUSE::RecentUploads::Tail>
+EMITED EVENTS section in L<POE::Component::WWW::PAUSE::RecentUploads::Tail>
 documentation for the format of C<ARG0>
 
 =head2 report_event
@@ -395,7 +436,7 @@ to handle the reports.
 
 The input will be in C<ARG0> and will be exactly the same as in
 L<POE::Component::WWW::PAUSE::RecentUploads::Tail> output. See
-OUTPUT section in L<POE::Component::WWW::PAUSE::RecentUploads::Tail>
+EMITED EVENTS section in L<POE::Component::WWW::PAUSE::RecentUploads::Tail>
 documentation for the format of C<ARG0>
 
 =head1 SEE ALSO
@@ -415,15 +456,59 @@ modules/versions:
 
 =head1 AUTHOR
 
-Zoffix Znet, E<lt>zoffix@cpan.orgE<gt>
+Zoffix Znet, C<< <zoffix at cpan.org> >>
+(L<http://zoffix.com>, L<http://haslayout.net>)
 
-=head1 COPYRIGHT AND LICENSE
+=head1 BUGS
 
-Copyright (C) 2008 by Zoffix Znet
+Please report any bugs or feature requests to C<bug-poe-component-irc-plugin-pause-recentuploads at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=POE-Component-IRC-Plugin-PAUSE-RecentUploads>.  I will be notified, and then you'll
+automatically be notified of progress on your bug as I make changes.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.8 or,
-at your option, any later version of Perl 5 you may have available.
+
+
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc POE::Component::IRC::Plugin::PAUSE::RecentUploads
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN's request tracker
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=POE-Component-IRC-Plugin-PAUSE-RecentUploads>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/POE-Component-IRC-Plugin-PAUSE-RecentUploads>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/POE-Component-IRC-Plugin-PAUSE-RecentUploads>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/POE-Component-IRC-Plugin-PAUSE-RecentUploads>
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2008 Zoffix Znet, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
 
 
 =cut
+
+1; # End of POE::Component::IRC::Plugin::PAUSE::RecentUploads

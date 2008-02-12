@@ -1,6 +1,8 @@
-Revision history for Perl extension POE::Component::IRC::Plugin::PAUSE::RecentUploads.
+Revision history for POE-Component-IRC-Plugin-PAUSE-RecentUploads
+
+0.02  Tue Feb 12 5:55:00 2008
+    - added flood_limit and flood_format options.
 
 0.01  Sat Feb  2 22:02:26 2008
-	- original version; created by h2xs 1.23 with options
-		-A -X -c --skip-exporter -v 0.01 -n POE::Component::IRC::Plugin::PAUSE::RecentUploads
+        First version, released on an unsuspecting world.
 

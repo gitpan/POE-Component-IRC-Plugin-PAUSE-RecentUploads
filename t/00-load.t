@@ -1,6 +1,4 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl POE-Component-IRC-Plugin-PAUSE-RecentUploads.t'
-
+#!/usr/bin/env perl
 
 use Test::More tests => 6;
 BEGIN {
@@ -12,3 +10,4 @@ BEGIN {
     use_ok('POE::Component::IRC::Plugin::PAUSE::RecentUploads');
 };
 
+diag( "Testing POE::Component::IRC::Plugin::PAUSE::RecentUploads $POE::Component::IRC::Plugin::PAUSE::RecentUploads::VERSION, Perl $], $^X" );

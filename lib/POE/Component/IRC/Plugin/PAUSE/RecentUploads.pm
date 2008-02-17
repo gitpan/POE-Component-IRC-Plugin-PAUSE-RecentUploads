@@ -1,10 +1,9 @@
 package POE::Component::IRC::Plugin::PAUSE::RecentUploads;
 
-use 5.008008;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Carp;
 use POE;
@@ -123,9 +122,10 @@ sub _fetched {
 
     unless ( $self->{quiet} ) {
         if ( defined $self->{flood_limit}
-            and ( my $total = @{ $input->{data} } ) > $self->{flood_limit} 
+            and
+            ( my $total = @{ $input->{data} || [] } ) > $self->{flood_limit}
         ) {
-            foreach my $channel ( @{ $self->{channels } } ) {
+            foreach my $channel ( @{ $self->{channels} || [] } ) {
                 my $format = $self->{flood_format};
                 $format =~ s/\Q[[:total:]]/$total/gi;
 
@@ -144,7 +144,7 @@ sub _fetched {
                 $format =~ s/\Q[[:name:]]/$dist->{name}/gi;
                 $format =~ s/\Q[[:size:]]/$dist->{size}/gi;
 
-                foreach my $channel ( @{ $self->{channels } } ) {
+                foreach my $channel ( @{ $self->{channels} || [] } ) {
                     $kernel->post(
                         $self->{irc} =>
                         $self->{message_type} =>

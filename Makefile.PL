@@ -2,17 +2,17 @@
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
+          'PL_FILES' => {},
+          'INSTALLDIRS' => 'site',
           'NAME' => 'POE::Component::IRC::Plugin::PAUSE::RecentUploads',
+          'EXE_FILES' => [],
           'VERSION_FROM' => 'lib/POE/Component/IRC/Plugin/PAUSE/RecentUploads.pm',
           'PREREQ_PM' => {
-                           'Carp' => '1.04',
-                           'POE' => '0.9999',
+                           'Test::More' => 0,
                            'POE::Component::IRC::Plugin' => '0.09',
                            'POE::Component::WWW::PAUSE::RecentUploads::Tail' => '0.01',
-                           'Test::More' => '0'
-                         },
-          'INSTALLDIRS' => 'site',
-          'EXE_FILES' => [],
-          'PL_FILES' => {}
+                           'POE' => '0.9999',
+                           'Carp' => '1.04'
+                         }
         )
 ;

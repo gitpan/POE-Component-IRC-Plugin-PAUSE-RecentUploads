@@ -14,7 +14,7 @@ my $builder = Module::Build->new(
         Carp                       => 1.04,
         POE                        => 0.9999,
         'POE::Component::IRC::Plugin' => 0.09,
-        'POE::Component::WWW::PAUSE::RecentUploads::Tail' => 0.01,
+        'POE::Component::WWW::PAUSE::RecentUploads::Tail' => 0.05,
     },
     add_to_cleanup      => [ 'POE-Component-IRC-Plugin-PAUSE-RecentUploads-*' ],
     create_makefile_pl => 'traditional',

@@ -10,7 +10,7 @@ WriteMakefile
           'PREREQ_PM' => {
                            'Test::More' => 0,
                            'POE::Component::IRC::Plugin' => '0.09',
-                           'POE::Component::WWW::PAUSE::RecentUploads::Tail' => '0.01',
+                           'POE::Component::WWW::PAUSE::RecentUploads::Tail' => '0.05',
                            'POE' => '0.9999',
                            'Carp' => '1.04'
                          }

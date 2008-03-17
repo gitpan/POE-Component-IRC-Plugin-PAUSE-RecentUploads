@@ -1,6 +1,6 @@
 ---
 name: POE-Component-IRC-Plugin-PAUSE-RecentUploads
-version: 0.03
+version: 0.04
 author:
   - 'Zoffix Znet <zoffix@cpan.org>'
 abstract: |-
@@ -13,13 +13,13 @@ requires:
   Carp: 1.04
   POE: 0.9999
   POE::Component::IRC::Plugin: 0.09
-  POE::Component::WWW::PAUSE::RecentUploads::Tail: 0.01
+  POE::Component::WWW::PAUSE::RecentUploads::Tail: 0.05
 build_requires:
   Test::More: 0
 provides:
   POE::Component::IRC::Plugin::PAUSE::RecentUploads:
     file: lib/POE/Component/IRC/Plugin/PAUSE/RecentUploads.pm
-    version: 0.03
+    version: 0.04
 generated_by: Module::Build version 0.2808
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

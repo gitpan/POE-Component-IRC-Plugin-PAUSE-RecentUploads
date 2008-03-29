@@ -3,7 +3,7 @@ package POE::Component::IRC::Plugin::PAUSE::RecentUploads;
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use Carp;
 use POE;
@@ -116,35 +116,19 @@ sub _fetched {
     my ( $kernel, $self, $input ) = @_[ KERNEL, OBJECT, ARG0 ];
     $self->{irc}->_send_event( $self->{fetched_event} => $input );
 
-    if ( @{ $input->{data} || [] } ) {
-        $self->{irc}->_send_event( $self->{report_event} => $input );
-    }
+    $input->{formatted_output} = $self->_format_report( $input );
 
     unless ( $self->{quiet} ) {
         if ( defined $self->{flood_limit}
             and
             ( my $total = @{ $input->{data} || [] } ) > $self->{flood_limit}
         ) {
-            foreach my $channel ( @{ $self->{channels} || [] } ) {
-                my $format = $self->{flood_format};
-                $format =~ s/\Q[[:total:]]/$total/gi;
-
-                $kernel->post(
-                    $self->{irc} =>
-                    $self->{message_type} =>
-                    $channel =>
-                    $format
-                );
-            }
-        }
-        else {
-            foreach my $dist ( @{ $input->{data} || [] } ) {
-                my $format = $self->{loud_format};
-                $format =~ s/\Q[[:dist:]]/$dist->{dist}/gi;
-                $format =~ s/\Q[[:name:]]/$dist->{name}/gi;
-                $format =~ s/\Q[[:size:]]/$dist->{size}/gi;
-
+            $input->{is_flood} = 1;
+            unless ( $self->{quiet_flood} ) {
                 foreach my $channel ( @{ $self->{channels} || [] } ) {
+                    my $format = $self->{flood_format};
+                    $format =~ s/\Q[[:total:]]/$total/gi;
+
                     $kernel->post(
                         $self->{irc} =>
                         $self->{message_type} =>
@@ -154,9 +138,36 @@ sub _fetched {
                 }
             }
         }
+        else {
+            foreach my $dist ( @{ $input->{formatted_output} } ) {
+                $kernel->post(
+                        $self->{irc} =>
+                        $self->{message_type} =>
+                        $_ =>
+                        $dist
+                ) for @{ $self->{channels} || [] };
+            }
+        }
+    }
+
+    if ( @{ $input->{data} || [] } ) {
+        $self->{irc}->_send_event( $self->{report_event} => $input );
     }
 }
 
+sub _format_report {
+    my ( $self, $input ) = @_;
+    my @out;
+    foreach my $dist ( @{ $input->{data} || [] } ) {
+        my $format = $self->{loud_format};
+        $format =~ s/\Q[[:dist:]]/$dist->{dist}/gi;
+        $format =~ s/\Q[[:name:]]/$dist->{name}/gi;
+        $format =~ s/\Q[[:size:]]/$dist->{size}/gi;
+
+        push @out, $format;
+    }
+    return \@out;
+}
 
 1;
 __END__
@@ -343,6 +354,16 @@ will not do the "reports" (see C<message_type> and C<loud_format> options
 above). It will only emit the two type of events (see below).
 B<Defaults to:> C<0>
 
+=head2 quiet_flood
+
+    ->new( quiet_flood => 1 );
+
+B<Optional>. When C<quiet_flood> option is set to a true value plugin
+will do "reports" only when the number of uploads does not exceed the
+C<flood_limit> (see below). This can be useful if you want to do regular
+reports but perhaps use L<POE::Component::IRC::Plugin::OutputToPastebin>
+when the number of uploads hits C<flood_limit>. B<Defaults to:> C<0>
+
 =head2 flood_limit
 
     ->new( flood_limit => 5 );
@@ -435,7 +456,14 @@ C<quiet> option to the constructor on and use a handler for this event
 to handle the reports.
 
 The input will be in C<ARG0> and will be exactly the same as in
-L<POE::Component::WWW::PAUSE::RecentUploads::Tail> output. See
+L<POE::Component::WWW::PAUSE::RecentUploads::Tail> output B<with the
+exception> that if C<quiet_flood> option is set to a true value and
+C<flood_limit> is reached then C<is_flood> key will be present containing
+C<1> as a value. B<Also> the C<formatted_output> key will be present
+value of which will be an arrayref elements of which will be formated
+"report" lines, basically the exact same lines you'd see the bot say
+when C<quiet> option is set to a false value.
+For the rest of the keys see
 EMITED EVENTS section in L<POE::Component::WWW::PAUSE::RecentUploads::Tail>
 documentation for the format of C<ARG0>
 

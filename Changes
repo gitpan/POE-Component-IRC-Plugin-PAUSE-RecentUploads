@@ -1,5 +1,8 @@
 Revision history for POE-Component-IRC-Plugin-PAUSE-RecentUploads
 
+0.05  Mar 28, 2008
+    - added C<quiet_flood> option and C<formatted_output> in events
+
 0.04  Mar 17, 2008
     - changed prereqs to reflect versions with bug fixes
 
